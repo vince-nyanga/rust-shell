@@ -28,7 +28,7 @@ impl CommandHandler for TypeCommandHandler {
                 .map(|path| format!("{}/{}", path, arguments[0]))
                 .find(|path| std::fs::metadata(path).is_ok()) {
                 Some(path) => println!("{} is {}", arguments[0], path),
-                None => println!("{}: command not found", arguments[0])
+                None => println!("{}: not found", arguments[0])
             }
         }
     }
