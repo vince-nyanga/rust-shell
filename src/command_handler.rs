@@ -62,11 +62,20 @@ impl CommandHandler for ExecutableCommandHandler {
     }
 }
 
+struct PwdCommandHandler;
+
+impl CommandHandler for PwdCommandHandler {
+    fn handle(&self, _arguments: &[&str]) {
+        println!("{}", env::current_dir().unwrap().display());
+    }
+}
+
 pub(crate) fn create_command_handler(cmd: &str) -> Result<Box<dyn CommandHandler>, ()> {
     match cmd {
         "echo" => Ok(Box::new(EchoCommandHandler)),
         "exit" => Ok(Box::new(ExitCommandHandler)),
         "type" => Ok(Box::new(TypeCommandHandler)),
+        "pwd" => Ok(Box::new(PwdCommandHandler)),
         _ => {
             match env::var("PATH")
                 .unwrap()
