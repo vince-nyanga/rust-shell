@@ -15,7 +15,7 @@ fn main() {
 
 fn handle_command(command: &str) {
     match command {
-        "exit" => {
+        "exit 0" => {
             std::process::exit(0);
         }
         _ => {
