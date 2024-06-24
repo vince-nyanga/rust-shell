@@ -44,11 +44,29 @@ impl CommandHandler for ExitCommandHandler {
     }
 }
 
+struct ExectuableCommandHandler{
+    command: String
+}
+
+impl CommandHandler for ExectuableCommandHandler {
+    
+    fn handle(&self, arguments: &[&str]) {
+        let cmd = &self.command;
+        let status = std::process::Command::new(cmd)
+            .args(arguments)
+            .status()
+            .expect("failed to execute process");
+        if !status.success() {
+            println!("{}: command not found", cmd);
+        }
+    }
+}
+
 pub(crate) fn create_command_handler(cmd: &str) -> Result<Box<dyn CommandHandler>, ()> {
     match cmd {
         "echo" => Ok(Box::new(EchoCommandHandler)),
         "exit" => Ok(Box::new(ExitCommandHandler)),
         "type" => Ok(Box::new(TypeCommandHandler)),
-        _ => Err(())
+        _ => Ok(Box::new(ExectuableCommandHandler{command: cmd.to_string()}))
     }
 }
