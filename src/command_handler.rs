@@ -44,11 +44,11 @@ impl CommandHandler for ExitCommandHandler {
     }
 }
 
-struct ExectuableCommandHandler{
+struct ExecutableCommandHandler{
     command: String
 }
 
-impl CommandHandler for ExectuableCommandHandler {
+impl CommandHandler for ExecutableCommandHandler {
     
     fn handle(&self, arguments: &[&str]) {
         let cmd = &self.command;
@@ -67,6 +67,15 @@ pub(crate) fn create_command_handler(cmd: &str) -> Result<Box<dyn CommandHandler
         "echo" => Ok(Box::new(EchoCommandHandler)),
         "exit" => Ok(Box::new(ExitCommandHandler)),
         "type" => Ok(Box::new(TypeCommandHandler)),
-        _ => Ok(Box::new(ExectuableCommandHandler{command: cmd.to_string()}))
+        _ => {
+            match env::var("PATH")
+                .unwrap()
+                .split(":")
+                .map(|path| format!("{}/{}", path, cmd))
+                .find(|path| std::fs::metadata(path).is_ok()) {
+                Some(_) => Ok(Box::new(ExecutableCommandHandler{command: cmd.to_string()})),
+                None => Err(()),
+            }
+        }
     }
 }
