@@ -1,7 +1,7 @@
 use std::env;
 use std::process::exit;
 
-const BUILT_IN_COMMANDS: [&str; 3] = ["echo", "exit", "type"];
+const BUILT_IN_COMMANDS: [&str; 4] = ["echo", "exit", "type", "pwd"];
 
 pub(crate) trait CommandHandler {
     fn handle(&self, arguments: &[&str]);
