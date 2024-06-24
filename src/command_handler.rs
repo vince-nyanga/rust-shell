@@ -79,8 +79,12 @@ struct CurrentDirectoryCommandHandler;
 
 impl CommandHandler for CurrentDirectoryCommandHandler {
     fn handle(&self, arguments: &[&str]) {
-       let path = arguments[0];
-        if !env::set_current_dir(path).is_ok() {
+       let path = match arguments[0] {
+            "~" => env::var("HOME").unwrap(),
+            _ => arguments[0].to_string()
+       };
+        
+        if !env::set_current_dir(path.clone()).is_ok() {
             println!("cd: {}: No such file or directory", path);
         }
     }
