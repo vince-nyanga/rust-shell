@@ -5,7 +5,6 @@ use std::io::{self, Write};
 use crate::command_handler::create_command_handler;
 
 fn main() {
-    // Uncomment this block to pass the first stage
     wait_for_input();
 
     loop {
