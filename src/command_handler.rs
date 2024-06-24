@@ -1,7 +1,7 @@
 use std::env;
 use std::process::exit;
 
-const BUILT_IN_COMMANDS: [&str; 4] = ["echo", "exit", "type", "pwd"];
+const BUILT_IN_COMMANDS: [&str; 5] = ["echo", "exit", "type", "pwd", "cd"];
 
 pub(crate) trait CommandHandler {
     fn handle(&self, arguments: &[&str]);
@@ -22,11 +22,7 @@ impl CommandHandler for TypeCommandHandler {
         if BUILT_IN_COMMANDS.contains(&arguments[0]) {
             println!("{} is a shell builtin", arguments[0]);
         } else {
-            match env::var("PATH")
-                .unwrap()
-                .split(":")
-                .map(|path| format!("{}/{}", path, arguments[0]))
-                .find(|path| std::fs::metadata(path).is_ok()) {
+            match get_command_from_path(arguments[0]) {
                 Some(path) => println!("{} is {}", arguments[0], path),
                 None => println!("{}: not found", arguments[0])
             }
@@ -44,12 +40,11 @@ impl CommandHandler for ExitCommandHandler {
     }
 }
 
-struct ExecutableCommandHandler{
-    command: String
+struct ExecutableCommandHandler {
+    command: String,
 }
 
 impl CommandHandler for ExecutableCommandHandler {
-    
     fn handle(&self, arguments: &[&str]) {
         let cmd = &self.command;
         let status = std::process::Command::new(cmd)
@@ -70,8 +65,8 @@ impl CommandHandler for PwdCommandHandler {
     }
 }
 
-struct NonExistentCommandHandler{
-    command: String
+struct NonExistentCommandHandler {
+    command: String,
 }
 
 impl CommandHandler for NonExistentCommandHandler {
@@ -80,20 +75,36 @@ impl CommandHandler for NonExistentCommandHandler {
     }
 }
 
-pub(crate) fn create_command_handler(cmd: &str) -> Box<dyn CommandHandler> {
-    match cmd {
+struct CurrentDirectoryCommandHandler;
+
+impl CommandHandler for CurrentDirectoryCommandHandler {
+    fn handle(&self, arguments: &[&str]) {
+       let path = arguments[0];
+        if !env::set_current_dir(path).is_ok() {
+            println!("cd: {}: No such file or directory", path);
+        }
+    }
+}
+
+fn get_command_from_path(command: &str) -> Option<String> {
+    return env::var("PATH")
+        .unwrap()
+        .split(":")
+        .map(|path| format!("{}/{}", path, command))
+        .find(|path| std::fs::metadata(path).is_ok());
+}
+
+pub(crate) fn create_command_handler(command: &str) -> Box<dyn CommandHandler> {
+    match command {
         "echo" => Box::new(EchoCommandHandler),
         "exit" => Box::new(ExitCommandHandler),
         "type" => Box::new(TypeCommandHandler),
-        "pwd" =>  Box::new(PwdCommandHandler),
+        "pwd" => Box::new(PwdCommandHandler),
+        "cd" => Box::new(CurrentDirectoryCommandHandler),
         _ => {
-            match env::var("PATH")
-                .unwrap()
-                .split(":")
-                .map(|path| format!("{}/{}", path, cmd))
-                .find(|path| std::fs::metadata(path).is_ok()) {
-                Some(_) => Box::new(ExecutableCommandHandler{command: cmd.to_string()}),
-                None => Box::new(NonExistentCommandHandler{command: cmd.to_string()}),
+            match get_command_from_path(command) {
+                Some(_) => Box::new(ExecutableCommandHandler { command: command.to_string() }),
+                None => Box::new(NonExistentCommandHandler { command: command.to_string() }),
             }
         }
     }
