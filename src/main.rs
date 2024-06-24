@@ -15,6 +15,9 @@ fn main() {
 
 fn handle_command(command: &str) {
     match command {
+       x if x.starts_with("echo ") => {
+            println!("{}", x.trim_start_matches("echo "));
+        }
         "exit 0" => {
             std::process::exit(0);
         }
