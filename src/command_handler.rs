@@ -70,20 +70,30 @@ impl CommandHandler for PwdCommandHandler {
     }
 }
 
-pub(crate) fn create_command_handler(cmd: &str) -> Result<Box<dyn CommandHandler>, ()> {
+struct NonExistentCommandHandler{
+    command: String
+}
+
+impl CommandHandler for NonExistentCommandHandler {
+    fn handle(&self, _arguments: &[&str]) {
+        println!("{}: command not found", self.command);
+    }
+}
+
+pub(crate) fn create_command_handler(cmd: &str) -> Box<dyn CommandHandler> {
     match cmd {
-        "echo" => Ok(Box::new(EchoCommandHandler)),
-        "exit" => Ok(Box::new(ExitCommandHandler)),
-        "type" => Ok(Box::new(TypeCommandHandler)),
-        "pwd" => Ok(Box::new(PwdCommandHandler)),
+        "echo" => Box::new(EchoCommandHandler),
+        "exit" => Box::new(ExitCommandHandler),
+        "type" => Box::new(TypeCommandHandler),
+        "pwd" =>  Box::new(PwdCommandHandler),
         _ => {
             match env::var("PATH")
                 .unwrap()
                 .split(":")
                 .map(|path| format!("{}/{}", path, cmd))
                 .find(|path| std::fs::metadata(path).is_ok()) {
-                Some(_) => Ok(Box::new(ExecutableCommandHandler{command: cmd.to_string()})),
-                None => Err(()),
+                Some(_) => Box::new(ExecutableCommandHandler{command: cmd.to_string()}),
+                None => Box::new(NonExistentCommandHandler{command: cmd.to_string()}),
             }
         }
     }

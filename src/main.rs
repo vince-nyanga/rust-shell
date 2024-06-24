@@ -11,19 +11,17 @@ fn main() {
     loop {
         let input = get_input();
         let prompt_parts: Vec<&str> = input.trim().split_whitespace().collect();
-        
-        if let Some((cmd, args)) = prompt_parts.split_first(){
-            match create_command_handler(cmd) {
-                Ok(handler) => handler.handle(args),
-                Err(_) => println!("{}: command not found", cmd)
-            }
+
+        if let Some((cmd, args)) = prompt_parts.split_first() {
+            let handler = create_command_handler(cmd);
+            handler.handle(args);
         }
-        
+
         wait_for_input();
     }
 }
 
-fn wait_for_input(){
+fn wait_for_input() {
     print!("$ ");
     io::stdout().flush().unwrap();
 }
